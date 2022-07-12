@@ -1,0 +1,23 @@
+{
+  "name": "ws-cpscar",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "scripts": {
+    "prestart": "tsc",
+    "start": "node ./dist/index.js",
+    "build": "tsc"
+  },
+  "author": "lnp",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.8.0"
+  },
+  "devDependencies": {
+    "@types/mqtt": "^2.5.0",
+    "@types/node": "^18.0.3",
+    "@types/ws": "^8.5.3",
+    "mqtt": "^4.3.7",
+    "typescript": "^4.7.4"
+  }
+}
