@@ -1,0 +1,47 @@
+[
+  {
+    "type": "crossing",
+    "timeStamp": 1657877034065,
+    "vehicles": [
+      {
+        "gpsType": 1, //  GPS类型 1=WGS84 0=GCJ02
+        "lat": 31.58501694,
+        "lon": 120.45157275,
+        "speed": 0.34195955,
+        "suggest": "STOP!",
+        "vid": "O2022071517202726500000000000000000304470"
+      }
+    ]
+  },
+  {
+    "type": "taxi",
+    "timeStamp": 1657877034065,
+    "taxis": [
+      {
+        "tid": "taxi_id",
+        "lat": 31.58501694,
+        "lon": 120.45157275,
+        "state": "空闲/0 忙碌/1",
+        "isCrossing": true,
+        "speed": 0.34195955,
+        "suggest": "STOP!"
+      }
+    ]
+  },
+  {
+    "type": "passenger",
+    "timeStamp": 1657877034065,
+    "passengers": [
+      {
+        "pid": "passenger_id",
+        "lat": 31.58501694,
+        "lon": 120.45157275,
+        "state": "未叫车0 已叫车1 运动中1", //静止 一闪一闪 并给出提示信息
+        "taxi_id": "taxi_id" //假设已叫到车 则此字段有用
+      }
+    ]
+  }
+]
+//路口：车辆在走 有提示信息
+//网约车：根据state要求有一定辨识 当通过路口 给出建议（显示suggest）
+//乘客：根据state要求有一定辨识 可以是按照一定频率闪动

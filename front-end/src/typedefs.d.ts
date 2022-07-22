@@ -8,10 +8,18 @@ import {
     LightInfo,
     PlanType,
     EnterPos,
-    GPSType
+    GPSType,
+    TaxiStatus
 } from './model/enums';
 
 declare global {
+
+    /** 经纬度对象 */
+    declare interface LatLng {
+        lat: number;
+        lng: number;
+    }
+
     /** 车辆 */
     declare interface Vehicle {
         /** 车牌 */
@@ -99,18 +107,63 @@ declare global {
 
     /** 与后端的 WebSocket 接口数据结构 */
     declare interface WSData {
+        /** 类型 */
+        type: string;
         /** 时间戳 */
-        time: number;
-        /** 设备序列号 */
-        did: string;
+        timeStamp: number;
+    }
+
+    /** 与后端的 WebSocket 接口 路口数据结构 */
+    declare interface CrossingData extends WSData {
+        type: 'crossing',
         /** 车辆列表 */
         vehicles: VehicleStruct[];
     }
 
-    /** 经纬度对象 */
-    declare interface LatLng {
+    /** 出租车详细数据 */
+    declare interface TaxiStruct {
+        /** 车辆唯一标识 */
+        tid: string;
+        /** 纬度 */
         lat: number;
-        lng: number;
+        /** 经度 */
+        lon: number;
+        /** 速度，单位m/s */
+        speed: number;
+        /** 建议 */
+        suggest: string;
+        /** 状态 */
+        state: TaxiStatus;
+        /** 过路口 */
+        isCrossing: boolean;
+    }
+
+    /** 与后端的 WebSocket 接口 网约车数据结构 */
+    declare interface TaxiData extends WSData {
+        type: 'taxi',
+        /** 车辆列表 */
+        taxis: TaxiStruct[];
+    }
+
+    /** 行人详细数据 */
+    declare interface PersonStruct {
+        /** 行人一标识 */
+        pid: string;
+        /** 纬度 */
+        lat: number;
+        /** 经度 */
+        lon: number;
+        /** 状态 */
+        state: TaxiStatus;
+        /** 假设已叫到出租车的车辆ID */
+        taxi_id: string;
+    }
+
+    /** 与后端的 WebSocket 接口 行人车数据结构 */
+    declare interface PassengerData extends WSData {
+        type: 'passenger',
+        /** 行人列表 */
+        passengers: PersonStruct[];
     }
 
 }

@@ -122,3 +122,22 @@ export enum GPSType {
     WGS84 = 0,
     GCJ02 = 1
 }
+
+/** 出租车状态 */
+export enum TaxiStatus {
+    /** 空闲 */
+    Idle = 0,
+    /** 忙碌 */
+    Busy = 1
+}
+
+/** 行人状态 */
+export enum PersonStatus {
+    /** 未叫车 */
+    Idle = 0,
+    /** 已叫车 */
+    Called = 1,
+    /** 移动中 */
+    Moving = 2
+}
+

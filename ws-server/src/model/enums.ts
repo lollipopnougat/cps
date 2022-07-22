@@ -109,3 +109,42 @@ export enum GPSType {
     WGS84 = 0,
     GCJ02
 }
+
+/** 过路口算法需要的灯色 */
+export enum GLightColor {
+    RED = -1,
+    YELLOW = 0,
+    GREEN = 1
+}
+
+/** 过路口建议算法值 */
+export enum SuggestValue {
+    PASS = 1,
+    Crusing = 0,
+    STOP = -1
+}
+
+/** 过路口建议返回值枚举 */
+export enum SuggestRT {
+    PASS = 'Pass',
+    Crusing = 'Crusing',
+    STOP = 'Stop'
+}
+
+/** 出租车状态 */
+export enum TaxiStatus {
+    /** 空闲 */
+    Idle = 0,
+    /** 忙碌 */
+    Busy = 1
+}
+
+/** 行人状态 */
+export enum PersonStatus {
+    /** 未叫车 */
+    Idle = 0,
+    /** 已叫车 */
+    Called = 1,
+    /** 移动中 */
+    Moving = 2
+}

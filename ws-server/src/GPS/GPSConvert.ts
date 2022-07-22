@@ -1,10 +1,5 @@
-interface LatLng {
-    lat: number;
-    lng: number;
-}
-
 export default class GPSConvert {
-    private static readonly xPi = 3.14159265358979324 * 3000.0 / 180.0;
+    // private static readonly xPi = 3.14159265358979324 * 3000.0 / 180.0;
     private static readonly pi = 3.1415926535897932384626  // π
     private static readonly a = 6378245.0  // 长半轴
     private static readonly ee = 0.00669342162296594323  // 扁率
@@ -39,7 +34,7 @@ export default class GPSConvert {
     static gcj02ToWGS84(arg0: number | LatLng, arg1?: number): LatLng {
         let lat = 0;
         let lng = 0;
-        if (typeof(arg0) === 'number') {
+        if (typeof (arg0) === 'number') {
             lat = arg0;
             lng = arg1!;
         }
@@ -70,3 +65,4 @@ export default class GPSConvert {
     }
 
 }
+
