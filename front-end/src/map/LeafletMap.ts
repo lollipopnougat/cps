@@ -2,6 +2,7 @@ import L from 'leaflet';
 import { GPSType, HexColor } from '../model/enums';
 import Random from '../utils/Random';
 import GPSConvert from '../gps/GPSConvert';
+import StatusParser from '../model/StatusParser';
 
 /** 车辆图标 SVG */
 const svgCarIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
@@ -42,7 +43,7 @@ export default class LeafletMap {
         // for (let [_, v] of Object.entries(HexColor)) {
         //     this.creatCarIcon(v);
         // }
-        Object.entries(HexColor).forEach(([_, e]) => this.creatCarIcon(e));
+        Object.entries(HexColor).forEach(([_, e]) => { this.creatCarIcon(e); this.creatTaxiIcon(e); this.creatPersonIcon(e); });
         // 设置自动清理长期未使用的vid颜色信息
         setInterval(() => {
             this.autoRemoveColor();
@@ -134,9 +135,10 @@ export default class LeafletMap {
      * @param tid - 网约车标识
      * @returns 指定颜色的图标
      */
-     private getColorTaxiIcon(tid: string): L.DivIcon {
+    private getColorTaxiIcon(tid: string): L.DivIcon {
         const color = this.getColor(tid);
-        return this.taxiIcons.get(color)!;
+        const tmp = this.taxiIcons.get(color)!;
+        return tmp;
     }
 
     /**
@@ -144,7 +146,7 @@ export default class LeafletMap {
      * @param tid - 行人标识
      * @returns 指定颜色的图标
      */
-     private getColorPersonIcon(pid: string): L.DivIcon {
+    private getColorPersonIcon(pid: string): L.DivIcon {
         const color = this.getColor(pid);
         return this.personIcons.get(color)!;
     }
@@ -221,7 +223,7 @@ export default class LeafletMap {
      * 在地图上放置多个网约车
      * @param taxis - 网约车信息数组
      */
-     setTaxis(taxis: TaxiStruct[]) {
+    setTaxis(taxis: TaxiStruct[]) {
         this.removeTaxis();
         const tmMap = new Map<string, TaxiStruct>();
         for (let i of taxis) {
@@ -233,14 +235,14 @@ export default class LeafletMap {
             // }
             tmMap.set(i.tid, i);
         }
-        tmMap.forEach(e => this.addTaxiMarker({ lat: e.lat, lng: e.lon }, this.getColorTaxiIcon(e.tid), `当前速度 ${e.speed.toFixed(3)}m/s<br>建议 ${e.suggest}<br>状态 ${e.state}`, e.tid));
+        tmMap.forEach(e => this.addTaxiMarker({ lat: e.lat, lng: e.lon }, this.getColorTaxiIcon(e.tid), `当前速度 ${e.speed.toFixed(3)}m/s<br>建议 ${e.suggest}<br>状态 ${StatusParser.parseTaxi(e.state)}`, e.tid));
     }
 
     /**
      * 在地图上放置多个行人
      * @param persons - 行人信息数组
      */
-     setPersons(persons: PersonStruct[]) {
+    setPersons(persons: PersonStruct[]) {
         this.removePersons();
         const tmMap = new Map<string, PersonStruct>();
         for (let i of persons) {
@@ -252,7 +254,7 @@ export default class LeafletMap {
             // }
             tmMap.set(i.pid, i);
         }
-        tmMap.forEach(e => this.addTaxiMarker({ lat: e.lat, lng: e.lon }, this.getColorPersonIcon(e.pid), `状态 ${e.state}`, e.pid));
+        tmMap.forEach(e => this.addPersonMarker({ lat: e.lat, lng: e.lon }, this.getColorPersonIcon(e.pid), `状态 ${StatusParser.parsePerson(e.state)}`, e.pid));
     }
 
     /** 清除地图上的所有车辆 */
@@ -304,7 +306,7 @@ export default class LeafletMap {
      * @param tip - 标记tooltip显示的文本
      * @param tid - 关联的网约车标识
      */
-     private addTaxiMarker(latlng: LatLng, icon: L.DivIcon | L.Icon, tip: string, tid: string) {
+    private addTaxiMarker(latlng: LatLng, icon: L.DivIcon | L.Icon, tip: string, tid: string) {
         const marker = new L.Marker(latlng, { icon: icon });
         marker.addTo(this.map);
         if (this.tooltips) {
@@ -322,7 +324,7 @@ export default class LeafletMap {
      * @param tip - 标记tooltip显示的文本
      * @param pid - 关联的行人标识
      */
-     private addPersonMarker(latlng: LatLng, icon: L.DivIcon | L.Icon, tip: string, pid: string) {
+    private addPersonMarker(latlng: LatLng, icon: L.DivIcon | L.Icon, tip: string, pid: string) {
         const marker = new L.Marker(latlng, { icon: icon });
         marker.addTo(this.map);
         if (this.tooltips) {
@@ -352,7 +354,7 @@ export default class LeafletMap {
      * @param tid - 指定的网约车标识
      * @returns 是否成功
      */
-     private removeTaxiMarker(tid: string): boolean {
+    private removeTaxiMarker(tid: string): boolean {
         if (this.taxis.has(tid)) {
             const marker = this.taxis.get(tid)!;
             this.map.removeLayer(marker);
@@ -366,7 +368,7 @@ export default class LeafletMap {
      * @param tid - 指定的网约车标识
      * @returns 是否成功
      */
-     private removePersonMarker(tid: string): boolean {
+    private removePersonMarker(tid: string): boolean {
         if (this.persons.has(tid)) {
             const marker = this.persons.get(tid)!;
             this.map.removeLayer(marker);
@@ -399,11 +401,11 @@ export default class LeafletMap {
      * @param color - 图标颜色 
      * @returns 是否创建成功
      */
-     private creatTaxiIcon(color: HexColor): boolean {
-        if (this.carIcons.has(color)) {
+    private creatTaxiIcon(color: HexColor): boolean {
+        if (this.taxiIcons.has(color)) {
             return false;
         }
-        this.carIcons.set(color, new L.DivIcon({
+        this.taxiIcons.set(color, new L.DivIcon({
             html: svgTaxiIcon,
             className: color,
             iconSize: [36, 32],
@@ -418,11 +420,11 @@ export default class LeafletMap {
      * @param color - 图标颜色 
      * @returns 是否创建成功
      */
-     private creatPersonIcon(color: HexColor): boolean {
-        if (this.carIcons.has(color)) {
+    private creatPersonIcon(color: HexColor): boolean {
+        if (this.personIcons.has(color)) {
             return false;
         }
-        this.carIcons.set(color, new L.DivIcon({
+        this.personIcons.set(color, new L.DivIcon({
             html: svgPersonIcon,
             className: color,
             iconSize: [20, 32],

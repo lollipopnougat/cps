@@ -70,6 +70,10 @@ body {
 }
 
 .toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
   position: fixed;
   top: 20px;
   right: 10px;
@@ -81,7 +85,7 @@ body {
   background: var(--color-dark);
   border: none;
   color: var(--color-light);
-  margin: 0 10px;
+  margin: 0 2px;
   padding: 8px 10px;
   border-radius: 5px;
   font-family: 'Microsoft YaHei';
@@ -99,4 +103,8 @@ body {
 
 .toolbar button.on {
   background: var(--color-green);
+}
+
+.toolbar button.filter {
+  background: var(--color-red);
 }

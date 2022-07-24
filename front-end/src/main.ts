@@ -5,15 +5,20 @@ import LeafletMap from './map/LeafletMap';
 import GPSConvert from './gps/GPSConvert';
 
 
+
 /** 创建地图 */
 const map = new LeafletMap('map');
 const host = '118.195.244.224';
-const port = 1883;
+
+let filteCrossing = false;
+let filteTaxi = false;
+// const port = 1883;
+const port = 3001;
 // const host = '127.0.0.1';
 // const port = 3001;
 //let carList: VehicleStruct[] = [];
 // 中心位置
-const cc: LatLng = { 
+const cc: LatLng = {
   lat: 31.58459362995765,
   lng: 120.4529333734722
 };
@@ -26,7 +31,7 @@ map.setView(GPSConvert.gcj02ToWGS84(cc), 16);
 // let url = 'ws://localhost:3001/ws';
 const url = `ws://${host}:${port}/ws`;
 let ws = new WebSocket(url);
-
+//let mqtts = mqtt.connect(url);
 //let changed = false;
 
 
@@ -37,15 +42,46 @@ const fun = (msg: MessageEvent<string>) => {
   const data = JSON.parse(msg.data) as CrossingData | TaxiData | PassengerData;
   //carList = carList.concat(data.vehicles);
   if (data.type == 'crossing') {
+    if (filteCrossing) {
+      map.removeCars();
+      return;
+    }
     map.setCars(data.vehicles);
   }
   else if (data.type == 'taxi') {
+    if (filteTaxi) {
+      map.removeTaxis();
+      map.removePersons();
+      return;
+    }
     map.setTaxis(data.taxis);
   }
   else if (data.type == 'passenger') {
+    if (filteTaxi) {
+      map.removeTaxis();
+      map.removePersons();
+      return;
+    }
     map.setPersons(data.passengers);
   }
 };
+// (topic: string, payload: Buffer) => {
+//   let data: CrossingData | TaxiData | PassengerData;
+//   switch (topic) {
+//     case 'crossing':
+//       data = JSON.parse(payload.toString()) as CrossingData;
+//       map.setCars(data.vehicles);
+//       break;
+//     case 'taxi':
+//       data = JSON.parse(payload.toString()) as TaxiData;
+//       map.setTaxis(data.taxis);
+//       break;
+//     case 'passenger':
+//       data = JSON.parse(payload.toString()) as PassengerData;
+//       map.setPersons(data.passengers);
+//       break;
+//   }
+// };
 
 // setInterval(() => {
 //   map.setCars(carList);
@@ -66,6 +102,9 @@ const closeFun = () => {
     ws.onclose = closeFun;
   }
 }
+
+//mqtts.on('message', fun);
+//mqtts.on('disconnect', closeFun);
 
 ws.onmessage = fun;
 ws.onclose = closeFun;
@@ -92,16 +131,44 @@ ws.onclose = closeFun;
 
 window.onload = () => {
   const btn = document.getElementById('btn') as HTMLButtonElement;
+  const btn_c = document.getElementById('btn_c') as HTMLButtonElement;
+  const btn_t = document.getElementById('btn_t') as HTMLButtonElement;
   btn.onclick = () => {
     if (map.tooltipStatus) {
       map.tooltipStatus = false;
       btn.className = '';
-      btn.innerText = '显示信息';
+      btn.innerText = '显示tip信息';
     }
     else {
       map.tooltipStatus = true;
       btn.className = 'on';
-      btn.innerText = '关闭信息';
+      btn.innerText = '关闭tip信息';
+    }
+  };
+
+  btn_c.onclick = () => {
+    if (filteCrossing) {
+      filteCrossing = false;
+      btn_c.className = '';
+      btn_c.innerText = '关闭路口信息';
+    }
+    else {
+      filteCrossing = true;
+      btn_c.className = 'filter';
+      btn_c.innerText = '打开路口信息';
+    }
+  };
+
+  btn_t.onclick = () => {
+    if (filteTaxi) {
+      filteTaxi = false;
+      btn_t.className = '';
+      btn_t.innerText = '关闭网约车信息';
+    }
+    else {
+      filteTaxi = true;
+      btn_t.className = 'filter';
+      btn_t.innerText = '打开网约车信息';
     }
   };
 };

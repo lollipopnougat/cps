@@ -154,7 +154,7 @@ declare global {
         /** 经度 */
         lon: number;
         /** 状态 */
-        state: TaxiStatus;
+        state: PersonStatus;
         /** 假设已叫到出租车的车辆ID */
         taxi_id: string;
     }

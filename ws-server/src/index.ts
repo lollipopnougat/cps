@@ -17,7 +17,8 @@ const updateIntervalms = 1 * 1000;
 let cid = 0;
 let sendCount = 0;
 let mqttSendCount = 0;
-let test = 0;
+let packetRecvCount = 0;
+let taxiTransCount = 0;
 
 /** ws连接池 */
 const conPool: Map<string, WebSocket> = new Map();
@@ -69,12 +70,21 @@ wss.on('connection', (ws) => {
 
 /** mqtt发布 */
 const publisher = mqtt.connect({
-    host: '118.195.244.224',
+    // host: '118.195.244.224',
+    // port: 1883
+    host: '127.0.0.1',
     port: 1883
 });
 
 publisher.on('connect', () => {
     ColorConsole.log(`[server] {}publisher connected to mqtt server{}`, ColorConsole.MAGENTA);
+});
+
+
+publisher.on('message', (topic: string, msg: Buffer) => {
+    taxiTransCount++;
+    const datastr = msg.toString('utf8');
+    wsend(datastr);
 });
 
 
@@ -104,7 +114,6 @@ carClient.on('message', (topic: string, msg: Buffer) => {
     } else if (js.tag == 2504) {
         let device = js as Device2504Frame;
         filter.crossingLight = device;
-
     }
     
 });
@@ -126,9 +135,11 @@ setInterval(() => {
 }, updateIntervalms);
 
 carClient.subscribe(['tian_rsu/ecnu/2503', 'tian_rsu/ecnu/2504'], { qos: 0 });
+publisher.subscribe(['taxi', 'passenger']);
 
 setInterval(() => {
-    ColorConsole.log(`[server] server has sent {}${sendCount}{} ws packets.`, ColorConsole.BLUE);
-    ColorConsole.log(`[server] server has recv {}${test}{} packets.`, ColorConsole.BLUE);
-    ColorConsole.log(`[server] server has sent {}${mqttSendCount}{} mqtt packets.`, ColorConsole.BLUE);
+    ColorConsole.log(`[server] server has sent {}${sendCount}{} crossing ws packets.`, ColorConsole.BLUE);
+    ColorConsole.log(`[server] server has recv {}${packetRecvCount}{} packets.`, ColorConsole.GREEN);
+    ColorConsole.log(`[server] server has sent {}${mqttSendCount}{} mqtt packets.`, ColorConsole.MAGENTA);
+    ColorConsole.log(`[server] server has transform {}${taxiTransCount}{} mqtt to ws packets.`, ColorConsole.YELLOW);
 }, intervalms);
