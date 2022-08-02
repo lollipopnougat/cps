@@ -1,9 +1,14 @@
 /** 交通参与者类型 */
 export enum PtcType {
+
     Unknown = 0,
+    /** 机动车 */
     MVehicle,
+    /** 非机动车 */
     NMVehicle,
+    /** 行人 */
     Passenger,
+    /** RSU设备 */
     RSU
 }
 

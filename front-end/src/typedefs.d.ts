@@ -97,6 +97,8 @@ declare global {
         lat: number;
         /** 经度 */
         lon: number;
+        /** 目标朝向，和正北方向夹角，单位度 */
+        hea: number; 
         /** 速度，单位m/s */
         speed: number;
         /** 建议 */
@@ -143,6 +145,29 @@ declare global {
         type: 'taxi',
         /** 车辆列表 */
         taxis: TaxiStruct[];
+    }
+
+    /** 真车详细数据 */
+    declare interface RealCarStruct {
+        /** 车辆唯一标识 */
+        rid: string;
+        /** 纬度 */
+        lat: number;
+        /** 经度 */
+        lon: number;
+        /** 速度 */
+        speed: number;
+        /** 时间戳 */
+        timeStamp: number;
+        /** 建议 */
+        suggest: string;
+    }
+
+    /** 与后端的 WebSocket 接口 真车数据结构 */
+    declare interface RCData extends WSData {
+        type: 'rc',
+        /** 行人列表 */
+        cars: RealCarStruct[];
     }
 
     /** 行人详细数据 */

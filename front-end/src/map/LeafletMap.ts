@@ -43,7 +43,7 @@ export default class LeafletMap {
         // for (let [_, v] of Object.entries(HexColor)) {
         //     this.creatCarIcon(v);
         // }
-        Object.entries(HexColor).forEach(([_, e]) => { this.creatCarIcon(e); this.creatTaxiIcon(e); this.creatPersonIcon(e); });
+        Object.entries(HexColor).forEach(([_, e]) => { this.creatCarIcon(e); this.creatTaxiIcon(e); this.creatRcIcon(e); this.creatPersonIcon(e); });
         // 设置自动清理长期未使用的vid颜色信息
         setInterval(() => {
             this.autoRemoveColor();
@@ -67,6 +67,9 @@ export default class LeafletMap {
     /** 预加载的网约车图标库，按颜色索引 */
     private taxiIcons = new Map<HexColor, L.DivIcon>();
 
+    /** 预加载的真车图标库，按颜色索引 */
+    private rcIcons = new Map<HexColor, L.DivIcon>();
+
     /** 预加载的行人图标库，按颜色索引 */
     private personIcons = new Map<HexColor, L.DivIcon>();
 
@@ -74,10 +77,10 @@ export default class LeafletMap {
     private carColorMap = new Map<string, HexColor>();
 
     /** 网约车 tid 与颜色一对一映射表 */
-    private taxiColorMap = new Map<string, HexColor>();
+    //private taxiColorMap = new Map<string, HexColor>();
 
     /** 行人 pid 与颜色一对一映射表 */
-    private personColorMap = new Map<string, HexColor>();
+    //private personColorMap = new Map<string, HexColor>();
 
     /** 一对一映射表中含有的vid列表(LRU机制，最近访问的在列表尾部) */
     //private vidHistory: string[] = [];
@@ -96,6 +99,12 @@ export default class LeafletMap {
 
     /** 当前在地图上的网约车id列表 */
     private taxiIds: string[] = [];
+
+    /** 当前在地图上的真车<id, UI标识>Map */
+    private rcs: Map<string, L.Marker<any>> = new Map();
+
+    /** 当前在地图上的真车id列表 */
+    private rcIds: string[] = [];
 
     /** 当前在地图上的行人<id, UI标识>Map */
     private persons: Map<string, L.Marker<any>> = new Map();
@@ -142,8 +151,19 @@ export default class LeafletMap {
     }
 
     /**
+     * 根据真车标识获取指定颜色的图标
+     * @param rid - 真车标识
+     * @returns 指定颜色的图标
+     */
+     private getColorRcIcon(rid: string): L.DivIcon {
+        const color = this.getColor(rid);
+        const tmp = this.rcIcons.get(color)!;
+        return tmp;
+    }
+
+    /**
      * 根据行人标识获取指定颜色的图标
-     * @param tid - 行人标识
+     * @param pid - 行人标识
      * @returns 指定颜色的图标
      */
     private getColorPersonIcon(pid: string): L.DivIcon {
@@ -208,7 +228,6 @@ export default class LeafletMap {
         this.removeCars();
         const tmMap = new Map<string, VehicleStruct>();
         for (let i of vehicles) {
-            this.vehicleIds.push(i.vid);
             if (i.gpsType == GPSType.GCJ02) {
                 const latlng = GPSConvert.gcj02ToWGS84(i.lat, i.lon);
                 i.lat = latlng.lat;
@@ -216,7 +235,10 @@ export default class LeafletMap {
             }
             tmMap.set(i.vid, i);
         }
-        tmMap.forEach(e => this.addCarMarker({ lat: e.lat, lng: e.lon }, this.getColorCarIcon(e.vid), `当前速度 ${e.speed.toFixed(3)}m/s<br>建议 ${e.suggest}`, e.vid));
+        tmMap.forEach(e => {
+            this.vehicleIds.push(e.vid);
+            this.addCarMarker({ lat: e.lat, lng: e.lon }, this.getColorCarIcon(e.vid), `当前速度 ${e.speed.toFixed(3)}m/s<br>建议 ${e.suggest}`, e.vid);
+        });
     }
 
     /**
@@ -227,7 +249,10 @@ export default class LeafletMap {
         this.removeTaxis();
         const tmMap = new Map<string, TaxiStruct>();
         for (let i of taxis) {
-            this.taxiIds.push(i.tid);
+            
+            //const latlng = GPSConvert.gcj02ToWGS84(i.lat, i.lon);
+            //i.lat = latlng.lat;
+            //i.lon = latlng.lng;
             // if (i.gpsType == GPSType.GCJ02) {
             //     const latlng = GPSConvert.gcj02ToWGS84(i.lat, i.lon);
             //     i.lat = latlng.lat;
@@ -235,7 +260,30 @@ export default class LeafletMap {
             // }
             tmMap.set(i.tid, i);
         }
-        tmMap.forEach(e => this.addTaxiMarker({ lat: e.lat, lng: e.lon }, this.getColorTaxiIcon(e.tid), `当前速度 ${e.speed.toFixed(3)}m/s<br>建议 ${e.suggest}<br>状态 ${StatusParser.parseTaxi(e.state)}`, e.tid));
+        tmMap.forEach(e => {
+            this.taxiIds.push(e.tid);
+            this.addTaxiMarker({ lat: e.lat, lng: e.lon }, this.getColorTaxiIcon(e.tid), `当前速度 ${e.speed.toFixed(3)}m/s<br>建议 ${e.suggest}<br>状态 ${StatusParser.parseTaxi(e.state)}`, e.tid);
+        });
+    }
+
+    /**
+     * 在地图上放置多个网约车
+     * @param rcs - 真车信息数组
+     */
+     setRcs(rcs: RealCarStruct[]) {
+        this.removeRcs();
+        const tmMap = new Map<string, RealCarStruct>();
+        for (let i of rcs) {
+            
+            //const latlng = GPSConvert.gcj02ToWGS84(i.lat, i.lon);
+            //i.lat = latlng.lat;
+            //i.lon = latlng.lng;
+            tmMap.set(i.rid, i);
+        }
+        tmMap.forEach(e => {
+            this.rcIds.push(e.rid);
+            this.addRcMarker({ lat: e.lat, lng: e.lon }, this.getColorRcIcon(e.rid), `当前速度 ${e.speed.toFixed(3)}m/s<br>建议 ${e.suggest}`, e.rid);
+    });
     }
 
     /**
@@ -246,7 +294,10 @@ export default class LeafletMap {
         this.removePersons();
         const tmMap = new Map<string, PersonStruct>();
         for (let i of persons) {
-            this.personIds.push(i.pid);
+            
+            //const latlng = GPSConvert.gcj02ToWGS84(i.lat, i.lon);
+            //i.lat = latlng.lat;
+            //i.lon = latlng.lng;
             // if (i.gpsType == GPSType.GCJ02) {
             //     const latlng = GPSConvert.gcj02ToWGS84(i.lat, i.lon);
             //     i.lat = latlng.lat;
@@ -254,7 +305,10 @@ export default class LeafletMap {
             // }
             tmMap.set(i.pid, i);
         }
-        tmMap.forEach(e => this.addPersonMarker({ lat: e.lat, lng: e.lon }, this.getColorPersonIcon(e.pid), `状态 ${StatusParser.parsePerson(e.state)}`, e.pid));
+        tmMap.forEach(e => {
+            this.personIds.push(e.pid);
+            this.addPersonMarker({ lat: e.lat, lng: e.lon }, this.getColorPersonIcon(e.pid), `状态 ${StatusParser.parsePerson(e.state)}`, e.pid);
+    });
     }
 
     /** 清除地图上的所有车辆 */
@@ -270,6 +324,14 @@ export default class LeafletMap {
         if (this.taxis.size > 0) {
             this.taxiIds.forEach(e => this.removeTaxiMarker(e));
             this.taxiIds.splice(0, this.taxiIds.length);
+        }
+    }
+
+    /** 清除地图上的所有真车 */
+    removeRcs() {
+        if (this.rcs.size > 0) {
+            this.rcIds.forEach(e => this.removeRcMarker(e));
+            this.rcIds.splice(0, this.rcIds.length);
         }
     }
 
@@ -315,6 +377,24 @@ export default class LeafletMap {
             }).openTooltip();
         }
         this.taxis.set(tid, marker);
+    }
+
+    /**
+     * 在地图上添加真车标记
+     * @param latlng - 经纬度对象
+     * @param icon - 标记图标
+     * @param tip - 标记tooltip显示的文本
+     * @param rid - 关联的真车标识
+     */
+     private addRcMarker(latlng: LatLng, icon: L.DivIcon | L.Icon, tip: string, rid: string) {
+        const marker = new L.Marker(latlng, { icon: icon });
+        marker.addTo(this.map);
+        if (this.tooltips) {
+            marker.bindTooltip(tip, {
+                permanent: true
+            }).openTooltip();
+        }
+        this.rcs.set(rid, marker);
     }
 
     /**
@@ -364,6 +444,20 @@ export default class LeafletMap {
     }
 
     /**
+     * 清除地图上指定的真车标记
+     * @param rid - 指定的真车标识
+     * @returns 是否成功
+     */
+     private removeRcMarker(rid: string): boolean {
+        if (this.rcs.has(rid)) {
+            const marker = this.rcs.get(rid)!;
+            this.map.removeLayer(marker);
+            return this.rcs.delete(rid);
+        }
+        return false;
+    }
+
+    /**
      * 清除地图上指定的行人标记
      * @param tid - 指定的网约车标识
      * @returns 是否成功
@@ -407,6 +501,25 @@ export default class LeafletMap {
         }
         this.taxiIcons.set(color, new L.DivIcon({
             html: svgTaxiIcon,
+            className: color,
+            iconSize: [36, 32],
+            iconAnchor: [18, 16],
+            tooltipAnchor: [18, 0]
+        }));
+        return true;
+    }
+
+    /**
+     * 使用预加载图标创建特定颜色的真车图标
+     * @param color - 图标颜色 
+     * @returns 是否创建成功
+     */
+     private creatRcIcon(color: HexColor): boolean {
+        if (this.rcIcons.has(color)) {
+            return false;
+        }
+        this.rcIcons.set(color, new L.DivIcon({
+            html: svgCarIcon,
             className: color,
             iconSize: [36, 32],
             iconAnchor: [18, 16],

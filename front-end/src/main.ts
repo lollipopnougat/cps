@@ -12,6 +12,7 @@ const host = '118.195.244.224';
 
 let filteCrossing = false;
 let filteTaxi = false;
+let filteRc = false;
 // const port = 1883;
 const port = 3001;
 // const host = '127.0.0.1';
@@ -39,7 +40,7 @@ const fun = (msg: MessageEvent<string>) => {
   if (msg.data[0] == 'c') {
     return;
   }
-  const data = JSON.parse(msg.data) as CrossingData | TaxiData | PassengerData;
+  const data = JSON.parse(msg.data) as CrossingData | TaxiData | PassengerData | RCData;
   //carList = carList.concat(data.vehicles);
   if (data.type == 'crossing') {
     if (filteCrossing) {
@@ -63,6 +64,13 @@ const fun = (msg: MessageEvent<string>) => {
       return;
     }
     map.setPersons(data.passengers);
+  }
+  else if (data.type == 'rc') {
+    if (filteRc) {
+      map.removeRcs();
+      return;
+    }
+    map.setRcs(data.cars);
   }
 };
 // (topic: string, payload: Buffer) => {
@@ -133,6 +141,7 @@ window.onload = () => {
   const btn = document.getElementById('btn') as HTMLButtonElement;
   const btn_c = document.getElementById('btn_c') as HTMLButtonElement;
   const btn_t = document.getElementById('btn_t') as HTMLButtonElement;
+  const btn_r = document.getElementById('btn_r') as HTMLButtonElement;
   btn.onclick = () => {
     if (map.tooltipStatus) {
       map.tooltipStatus = false;
@@ -169,6 +178,18 @@ window.onload = () => {
       filteTaxi = true;
       btn_t.className = 'filter';
       btn_t.innerText = '打开网约车信息';
+    }
+  };
+
+  btn_r.onclick = () => {
+    if (filteRc) {
+      filteRc = false;
+      btn_r.className = '';
+      btn_r.innerText = '关闭真车信息';
+    } else {
+      filteRc = true;
+      btn_r.className = 'filter';
+      btn_r.innerText = '打开真车信息';
     }
   };
 };

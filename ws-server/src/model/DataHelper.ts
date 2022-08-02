@@ -64,33 +64,37 @@ export class DeviceDataFilter {
             };
             for (let i of dataList) {
                 const latlng = GPSConvert.gcj02ToWGS84(i.lat, i.lon);
-                const deviceId = this.crossingLightMap.get(i.vehicle.cross_name);
-                let device: Device2504Frame | undefined;
-                if (deviceId) {
-                    device = this.crossingLights.get(deviceId);
-                }
-                let dis = 20;
-                let lightColor = GLightColor.RED;
                 let rt: GuidanceRT | undefined;
-                if (device) {
-                    dis = VincentyDisCal.getDistance(device.lat, device.lon, latlng.lat, latlng.lng);
-                    switch (device.light_info_list[0].group_list[0].g_color) {
-                        case LightGroupColor.FlashingGreen:
-                        case LightGroupColor.Green:
-                            lightColor = GLightColor.GREEN; break;
-                        case LightGroupColor.FlashingYellow:
-                        case LightGroupColor.Yellow:
-                            lightColor = GLightColor.YELLOW; break;
-                        case LightGroupColor.FlashingRed:
-                        case LightGroupColor.Red:
-                            lightColor = GLightColor.RED; break;
+                if (i.vehicle && i.vehicle.cross_name) {
+                    const deviceId = this.crossingLightMap.get(i.vehicle.cross_name);
+                    let device: Device2504Frame | undefined;
+                    if (deviceId) {
+                        device = this.crossingLights.get(deviceId);
                     }
-                    rt = Guidance.cal(device.light_info_list[0].group_list[0].g_time, lightColor, dis, i.spd * 3.6);
+                    let dis = 20;
+                    let lightColor = GLightColor.RED;
+                    if (device) {
+                        dis = VincentyDisCal.getDistance(device.lat, device.lon, latlng.lat, latlng.lng);
+                        switch (device.light_info_list[0].group_list[0].g_color) {
+                            case LightGroupColor.FlashingGreen:
+                            case LightGroupColor.Green:
+                                lightColor = GLightColor.GREEN; break;
+                            case LightGroupColor.FlashingYellow:
+                            case LightGroupColor.Yellow:
+                                lightColor = GLightColor.YELLOW; break;
+                            case LightGroupColor.FlashingRed:
+                            case LightGroupColor.Red:
+                                lightColor = GLightColor.RED; break;
+                        }
+                        rt = Guidance.cal(device.light_info_list[0].group_list[0].g_time, lightColor, dis, i.spd * 3.6);
+                    }
                 }
+
                 wsdata.vehicles.push({
                     vid: i.ptc_id_str,
                     lat: latlng.lat,
                     lon: latlng.lng,
+                    hea: i.hea,
                     speed: i.spd,
                     suggest: rt ? rt.type : Random.choice(DeviceDataFilter.suggests),
                     gpsType: GPSType.WGS84
@@ -125,33 +129,36 @@ export class DeviceDataFilter {
                     };
                     for (let i of tmp) {
                         const latlng = GPSConvert.gcj02ToWGS84(i.lat, i.lon);
-                        const deviceId = this.crossingLightMap.get(i.vehicle.cross_name);
-                        let device: Device2504Frame | undefined;
-                        if (deviceId) {
-                            device = this.crossingLights.get(deviceId);
-                        }
-                        let dis = 20;
-                        let lightColor = GLightColor.RED;
                         let rt: GuidanceRT | undefined;
-                        if (device) {
-                            dis = VincentyDisCal.getDistance(device.lat, device.lon, latlng.lat, latlng.lng);
-                            switch (device.light_info_list[0].group_list[0].g_color) {
-                                case LightGroupColor.FlashingGreen:
-                                case LightGroupColor.Green:
-                                    lightColor = GLightColor.GREEN; break;
-                                case LightGroupColor.FlashingYellow:
-                                case LightGroupColor.Yellow:
-                                    lightColor = GLightColor.YELLOW; break;
-                                case LightGroupColor.FlashingRed:
-                                case LightGroupColor.Red:
-                                    lightColor = GLightColor.RED; break;
+                        if (i.vehicle && i.vehicle.cross_name) {
+                            const deviceId = this.crossingLightMap.get(i.vehicle.cross_name);
+                            let device: Device2504Frame | undefined;
+                            if (deviceId) {
+                                device = this.crossingLights.get(deviceId);
                             }
-                            rt = Guidance.cal(device.light_info_list[0].group_list[0].g_time, lightColor, dis, i.spd * 3.6);
+                            let dis = 20;
+                            let lightColor = GLightColor.RED;
+                            if (device) {
+                                dis = VincentyDisCal.getDistance(device.lat, device.lon, latlng.lat, latlng.lng);
+                                switch (device.light_info_list[0].group_list[0].g_color) {
+                                    case LightGroupColor.FlashingGreen:
+                                    case LightGroupColor.Green:
+                                        lightColor = GLightColor.GREEN; break;
+                                    case LightGroupColor.FlashingYellow:
+                                    case LightGroupColor.Yellow:
+                                        lightColor = GLightColor.YELLOW; break;
+                                    case LightGroupColor.FlashingRed:
+                                    case LightGroupColor.Red:
+                                        lightColor = GLightColor.RED; break;
+                                }
+                                rt = Guidance.cal(device.light_info_list[0].group_list[0].g_time, lightColor, dis, i.spd * 3.6);
+                            }
                         }
                         wsdata.vehicles.push({
                             vid: i.ptc_id_str,
                             lat: latlng.lat,
                             lon: latlng.lng,
+                            hea: i.hea,
                             speed: i.spd,
                             suggest: rt ? rt.type : Random.choice(DeviceDataFilter.suggests),
                             gpsType: GPSType.WGS84

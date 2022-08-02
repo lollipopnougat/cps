@@ -148,6 +148,8 @@ declare global {
         lon: number;
         /** 速度，单位m/s */
         speed: number;
+        /** 目标朝向，和正北方向夹角，单位度 */
+        hea: number; 
         /** 建议 */
         suggest: string;
         /** GPS类型 */
@@ -208,12 +210,34 @@ declare global {
         taxi_id: string;
     }
 
-    /** 与后端的 WebSocket 接口 行人车数据结构 */
+    /** 与后端的 WebSocket 接口 行人数据结构 */
     declare interface PassengerData extends WSData {
         type: 'passenger',
         /** 行人列表 */
         passengers: PersonStruct[];
     }
+
+    /** 真车详细数据 */
+    declare interface RealCarStruct {
+        /** 车辆唯一标识 */
+        rid: string;
+        /** 纬度 */
+        lat: number;
+        /** 经度 */
+        lon: number;
+        /** 速度 */
+        speed: number;
+        /** 时间戳 */
+        timeStamp: number;
+    }
+
+    /** 与后端的 WebSocket 接口 真车数据结构 */
+    declare interface RCData extends WSData {
+        type: 'rc',
+        /** 真车列表 */
+        cars: RealCarStruct[];
+    }
+    
 
     /** 路口算法返回的结果 */
     declare interface GuidanceRT {

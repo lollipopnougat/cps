@@ -135,7 +135,7 @@ setInterval(() => {
 }, updateIntervalms);
 
 carClient.subscribe(['tian_rsu/ecnu/2503', 'tian_rsu/ecnu/2504'], { qos: 0 });
-publisher.subscribe(['taxi', 'passenger']);
+publisher.subscribe(['taxi', 'passenger', 'rc']);
 
 setInterval(() => {
     ColorConsole.log(`[server] server has sent {}${sendCount}{} crossing ws packets.`, ColorConsole.BLUE);
