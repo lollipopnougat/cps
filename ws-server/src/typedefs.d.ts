@@ -8,8 +8,10 @@ import {
     LightInfo,
     PlanType,
     EnterPos,
+    WaitType,
     GPSType,
-    SuggestValue
+    SuggestValue,
+    SuggestRT
 } from './model/enums';
 
 declare global {
@@ -71,6 +73,8 @@ declare global {
         spd: number;
         /** 车辆信息 */
         vehicle: Vehicle;
+        /** 设备ID信息 */
+        device_sn?: number;
     }
 
     /** 设备数据包公共部分 */
@@ -84,6 +88,7 @@ declare global {
         /** 设备序列号 */
         device_sn: string;
     }
+
 
     /** 灯组 */
     declare interface LightGroup {
@@ -103,6 +108,14 @@ declare global {
         group_num: number;
         /** 灯组信息 */
         group_list: LightGroup[];
+    }
+
+    /** 车道排队列表 */
+    declare interface WaitInfo {
+        /** 距离停车线排队长度，单位：米 */
+        w_len: number;
+        /** 车道类型 */
+        w_type?: WaitType;
     }
 
     /** 交通参与者信息上报格式 */
@@ -136,6 +149,24 @@ declare global {
         light_info_num: number;
         /** 灯组信息 */
         light_info_list: LightInfo[];
+    }
+
+    /** 流量上报格式 */
+    declare interface Device2505Frame extends DeviceFrame { 
+        tag: 2505,
+        /** 统计周期，单位秒 */
+        cycle: number;
+        /** 信号机所在路口中心点经度 */
+        lon: number;
+        /** 信号机所在路口中心点纬度 */
+        lat: number;
+        /** 进口方向 */
+        enter_pos?: EnterPos;
+        /** 车道数量 */
+        lane_num: number;
+        /** 车道排队列表 */
+        wait_list: WaitInfo[];
+
     }
 
     /** WebSocket 接口中的车辆对象结构 */
@@ -259,5 +290,16 @@ declare global {
         host: string;
         /** 端口号 */
         port?: number;
+    }
+
+    declare interface TrafficData {
+        /** 时间戳 */
+        time: number;
+        /** 采样时间间隔,单位秒 */
+        interval: number;
+        /** 路口设备编号 */
+        deviceId: string;
+        /** 时间间隔内的车辆数 */
+        carCount: number;
     }
 }

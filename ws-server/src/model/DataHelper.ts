@@ -1,8 +1,7 @@
-import { DataType, PtcType, GPSType, GLightColor, LightGroupColor } from './enums';
+import { DataType, PtcType, GPSType, GLightColor, LightGroupColor, SuggestRT } from './enums';
 import GPSConvert from '../GPS/GPSConvert';
 import Guidance from './Guidance';
 import VincentyDisCal from '../GPS/Distance';
-
 type AllDeviceFrame = Device2503Frame | Device2504Frame;
 type Predicate = (data: AllDeviceFrame) => boolean;
 
@@ -37,20 +36,21 @@ export class DeviceDataFilter {
     }
     private predicate: Predicate;
     private deviceType: DataType;
-    private static readonly suggests: string[] = ['Stop', 'PASS', 'Crusing'];
+    private static readonly suggests: SuggestRT[] = [SuggestRT.STOP, SuggestRT.PASS, SuggestRT.Crusing, SuggestRT.STOP];
 
     /** 路口位置map */
-    private crossingLights: Map<string, Device2504Frame> = new Map();
-    private crossingLightMap: Map<string, string> = new Map();
+    private crossingLights: Map<number, Device2504Frame> = new Map();
+    //private crossingLightMap: Map<string, string> = new Map();
     public set crossingLight(val: Device2504Frame) {
-        if (this.crossingLights.has(val.device_sn)) {
-            let d = this.crossingLights.get(val.device_sn) as Device2504Frame;
+        const dsn = parseInt(val.device_sn);
+        if (this.crossingLights.has(dsn)) {
+            let d = this.crossingLights.get(dsn) as Device2504Frame;
             d.light_info_list = val.light_info_list;
             d.light_info_num = val.light_info_num;
         }
         else {
-            this.crossingLights.set(val.device_sn, val);
-            this.crossingLightMap.set(val.local_id.toString(), val.device_sn);
+            this.crossingLights.set(dsn, val);
+            //this.crossingLightMap.set(val.local_id.toString(), val.device_sn);
         }
     }
 
@@ -65,12 +65,12 @@ export class DeviceDataFilter {
             for (let i of dataList) {
                 const latlng = GPSConvert.gcj02ToWGS84(i.lat, i.lon);
                 let rt: GuidanceRT | undefined;
-                if (i.vehicle && i.vehicle.cross_name) {
-                    const deviceId = this.crossingLightMap.get(i.vehicle.cross_name);
-                    let device: Device2504Frame | undefined;
-                    if (deviceId) {
-                        device = this.crossingLights.get(deviceId);
-                    }
+                if (i.vehicle && i.device_sn) {
+                    const device = this.crossingLights.get(i.device_sn + 1);
+                    // let device: Device2504Frame | undefined;
+                    // if (deviceId) {
+                    //     device = this.crossingLights.get(deviceId);
+                    // }
                     let dis = 20;
                     let lightColor = GLightColor.RED;
                     if (device) {
@@ -89,14 +89,23 @@ export class DeviceDataFilter {
                         rt = Guidance.cal(device.light_info_list[0].group_list[0].g_time, lightColor, dis, i.spd * 3.6);
                     }
                 }
-
+                let suggest = SuggestRT.PASS;
+                if (rt) {
+                    suggest = rt.type;
+                    if (rt.type === SuggestRT.STOP) {
+                        suggest = Random.choice(DeviceDataFilter.suggests);
+                    }
+                }
+                else {
+                    suggest = Random.choice(DeviceDataFilter.suggests);
+                }
                 wsdata.vehicles.push({
                     vid: i.ptc_id_str,
                     lat: latlng.lat,
                     lon: latlng.lng,
                     hea: i.hea,
                     speed: i.spd,
-                    suggest: rt ? rt.type : Random.choice(DeviceDataFilter.suggests),
+                    suggest: suggest,
                     gpsType: GPSType.WGS84
                 });
             }
@@ -130,16 +139,17 @@ export class DeviceDataFilter {
                     for (let i of tmp) {
                         const latlng = GPSConvert.gcj02ToWGS84(i.lat, i.lon);
                         let rt: GuidanceRT | undefined;
-                        if (i.vehicle && i.vehicle.cross_name) {
-                            const deviceId = this.crossingLightMap.get(i.vehicle.cross_name);
-                            let device: Device2504Frame | undefined;
-                            if (deviceId) {
-                                device = this.crossingLights.get(deviceId);
-                            }
+                        if (i.vehicle && i.device_sn) {
+                            const device = this.crossingLights.get(i.device_sn + 1);
+                            // let device: Device2504Frame | undefined;
+                            // if (deviceId) {
+                            //     device = this.crossingLights.get(deviceId);
+                            // }
                             let dis = 20;
                             let lightColor = GLightColor.RED;
                             if (device) {
                                 dis = VincentyDisCal.getDistance(device.lat, device.lon, latlng.lat, latlng.lng);
+
                                 switch (device.light_info_list[0].group_list[0].g_color) {
                                     case LightGroupColor.FlashingGreen:
                                     case LightGroupColor.Green:
@@ -154,13 +164,23 @@ export class DeviceDataFilter {
                                 rt = Guidance.cal(device.light_info_list[0].group_list[0].g_time, lightColor, dis, i.spd * 3.6);
                             }
                         }
+                        let suggest = SuggestRT.PASS;
+                        if (rt) {
+                            suggest = rt.type;
+                            if (rt.type === SuggestRT.STOP) {
+                                suggest = Random.choice(DeviceDataFilter.suggests);
+                            }
+                        }
+                        else {
+                            suggest = Random.choice(DeviceDataFilter.suggests);
+                        }
                         wsdata.vehicles.push({
                             vid: i.ptc_id_str,
                             lat: latlng.lat,
                             lon: latlng.lng,
                             hea: i.hea,
                             speed: i.spd,
-                            suggest: rt ? rt.type : Random.choice(DeviceDataFilter.suggests),
+                            suggest: suggest,
                             gpsType: GPSType.WGS84
                         });
                     }

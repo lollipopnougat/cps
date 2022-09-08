@@ -101,6 +101,24 @@ export enum LightGroupType {
     Passenger
 }
 
+/** 车道类型 */
+export enum WaitType {
+    /** 直行 */
+    Straight = 0,
+    /** 左转 */
+    Left,
+    /** 右转 */
+    Right,
+    /** 直左右 */
+    StraightLR,
+    /** 直右 */
+    StraightR,
+    /** 直左 */
+    StraightL,
+    /** 左右 */
+    LR
+}
+
 /** 数据包类型 */
 export enum DataType {
     Device2503,

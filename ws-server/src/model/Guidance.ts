@@ -11,6 +11,7 @@ export default class Guidance {
     static readonly gamma = 2;       // 全红清除时间  1
     static readonly a_comfort = 0.315;     // 舒适加速度   1
     static readonly d_max = 3.048;     // 最大减速度   1
+    // static usingTimes = 0;
 
     // static readonly RED = -1;
     // static readonly YELLOW = 0;
@@ -85,6 +86,7 @@ export default class Guidance {
         // static tag: number;   //相位灯标志
         // static S_ego: number; //距停止线距离
         // static V_ego: number;  //速度
+        // Guidance.usingTimes++;
         Guidance.S_ego = dis;
         Guidance.V_ego = speed;
         Guidance.tag = lightColor;
